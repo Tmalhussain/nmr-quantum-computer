@@ -1,4 +1,58 @@
-# Byte-compiled / optimized / DLL files
+# Python bytecode
+__pycache__/
+*.py[codz]
+*$py.class
+
+# Packaging and build
+build/
+dist/
+*.egg-info/
+.eggs/
+wheels/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Tests and coverage
+.pytest_cache/
+.hypothesis/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+.cache
+
+# Type checkers and linters
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environments
+.env
+.envrc
+.venv/
+venv/
+env/
+
+# Logs
+*.log
+
+# Project data and output (keep folder placeholders)
+data/*
+!data/.gitkeep
+plots/*
+!plots/.gitkeep
+
+# Arduino build output
+firmware/**/build/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+tempCodeRunnerFile.py# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
