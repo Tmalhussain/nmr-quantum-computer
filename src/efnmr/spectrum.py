@@ -11,3 +11,18 @@ def amplitude_spectrum(
     amplitude = abs(np.fft.rfft(tapered)) * 2 / hann.sum()
     freqs = np.fft.rfftfreq(len(x), d=1 / fs_hz)
     return freqs, amplitude
+
+
+def find_peak(
+    freqs: np.ndarray, amplitude: np.ndarray, f_center_hz: float, half_width_hz: float = 20.0
+) -> tuple[float, float]:
+    """Find the vertex with parabolic interpolation on the log scaled amplitude"""
+    idx = np.flatnonzero(
+        (f_center_hz - half_width_hz < freqs) & (freqs < f_center_hz + half_width_hz)
+    )
+    k = idx[np.argmax(amplitude[idx])]
+    a = np.log(amplitude[k - 1])
+    b = np.log(amplitude[k])
+    c = np.log(amplitude[k + 1])
+    delta = 1 / 2 * (a - c) / (a - 2 * b + c)
+    return float((k + delta) * (freqs[1] - freqs[0])), float(amplitude[k])
