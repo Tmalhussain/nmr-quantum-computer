@@ -52,3 +52,26 @@ def fit_rabi(pulse_s: np.ndarray, amplitudes: np.ndarray) -> dict:
         "a0_err": float(perr[2]),
         "c_err": float(perr[3]),
     }
+
+
+def echo_model(tau_s: np.ndarray, a0: float, t2: float, c: float) -> np.ndarray:
+    return a0 * np.exp(-2 * tau_s / t2) + c
+
+
+def fit_echo(tau_s: np.ndarray, amplitudes: np.ndarray) -> dict:
+    """Fit spin-echo decay vs tau; returns t2, a0, c and their 1σ errors."""
+    a0 = amplitudes[0] - amplitudes[-1]
+    t2 = 1.0
+    c = amplitudes[-1]
+    low = [0.0, 1e-6, 0.0]
+    high = [np.inf, np.inf, np.inf]
+    popt, pcov = curve_fit(echo_model, tau_s, amplitudes, p0=(a0, t2, c), bounds=(low, high))
+    perr = np.sqrt(np.diag(pcov))
+    return {
+        "a0": float(popt[0]),
+        "t2": float(popt[1]),
+        "c": float(popt[2]),
+        "a0_err": float(perr[0]),
+        "t2_err": float(perr[1]),
+        "c_err": float(perr[2]),
+    }
