@@ -75,3 +75,29 @@ def fit_echo(tau_s: np.ndarray, amplitudes: np.ndarray) -> dict:
         "t2_err": float(perr[1]),
         "c_err": float(perr[2]),
     }
+
+
+def rb_model(m: np.ndarray, a: float, p: float, b: float) -> np.ndarray:
+    return a * p**m + b
+
+
+def fit_rb(m: np.ndarray, survival: np.ndarray) -> dict:
+    a = survival[0] - survival[-1]
+    p = 0.98
+    b = survival[-1]
+    low = [0, 0, 0]
+    high = [1, 1, 1]
+    popt, pcov = curve_fit(rb_model, m, survival, p0=(a, p, b), bounds=(low, high))
+    perr = np.sqrt(np.diag(pcov))
+    r = (1 - popt[1]) / 2
+    r_err = perr[1] / 2
+    return {
+        "a": float(popt[0]),
+        "p": float(popt[1]),
+        "b": float(popt[2]),
+        "r": float(r),
+        "a_err": float(perr[0]),
+        "p_err": float(perr[1]),
+        "b_err": float(perr[2]),
+        "r_err": float(r_err),
+    }

@@ -1,7 +1,16 @@
 import numpy as np
 import pytest
 
-from efnmr.fits import echo_model, fit_echo, fit_rabi, fit_t1, rabi_model, t1_model
+from efnmr.fits import (
+    echo_model,
+    fit_echo,
+    fit_rabi,
+    fit_rb,
+    fit_t1,
+    rabi_model,
+    rb_model,
+    t1_model,
+)
 
 d = np.linspace(0.1, 2.5, 20)
 
@@ -64,3 +73,24 @@ def test_echo_noisy():
     fit = fit_echo(ECHO_TAUS_S, amplitudes)
 
     assert abs(fit["t2"] - 2.0) < 3 * fit["t2_err"]
+
+
+RB_LENGTHS = np.array([1, 2, 4, 8, 16, 32, 64, 96, 128], dtype=float)
+
+
+def test_rb_model_at_zero():
+    assert rb_model(0.0, a=0.5, p=0.98, b=0.5) == pytest.approx(1.0)
+
+
+def test_rb_noiseless():
+    survival = rb_model(RB_LENGTHS, a=0.5, p=0.98, b=0.5)
+    fit = fit_rb(RB_LENGTHS, survival)
+    assert fit["p"] == pytest.approx(0.98, rel=1e-3)
+    assert fit["r"] == pytest.approx(0.01, rel=1e-2)
+
+
+def test_rb_noisy():
+    rng = np.random.default_rng(0)
+    survival = rb_model(RB_LENGTHS, a=0.5, p=0.98, b=0.5) + rng.normal(0, 0.01, len(RB_LENGTHS))
+    fit = fit_rb(RB_LENGTHS, survival)
+    assert abs(fit["p"] - 0.98) < 3 * fit["p_err"]
