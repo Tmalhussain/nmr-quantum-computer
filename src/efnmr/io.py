@@ -1,5 +1,6 @@
 import csv
 import json
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -44,3 +45,11 @@ def append_log(run_dir: Path, row: dict) -> None:
         if is_new:
             writer.writeheader()
         writer.writerow(row)
+
+
+def new_run_dir(base_dir: Path, experiment: str, now: datetime | None = None) -> Path:
+    """Create and return base_dir/<YYYYMMDD-HHMMSS>_<experiment>/; doesnt reuses a folder."""
+    now = now or datetime.now()
+    run_dir = base_dir / f"{now:%Y%m%d-%H%M%S}_{experiment}"
+    run_dir.mkdir(parents=True, exist_ok=False)
+    return run_dir

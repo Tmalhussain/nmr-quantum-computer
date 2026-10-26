@@ -1,10 +1,11 @@
-import json
 import csv
+import json
+from datetime import datetime
 
 import numpy as np
 import pytest
 
-from efnmr.io import append_log, load_shot, save_shot
+from efnmr.io import append_log, load_shot, new_run_dir, save_shot
 from efnmr.sim import fid
 
 
@@ -63,3 +64,22 @@ def test_log_column_mismatch_raises(tmp_path):
     append_log(tmp_path, {"shot": 1, "snr": 7.5})
     with pytest.raises(ValueError):
         append_log(tmp_path, {"shot": 2, "temp_c": 30.0})
+
+
+def test_run_dir_name(tmp_path):
+    run_dir = new_run_dir(tmp_path, "rabi", now=datetime(2026, 10, 21, 14, 30, 0))
+    assert run_dir == tmp_path / "20261021-143000_rabi"
+    assert run_dir.is_dir()
+
+
+def test_run_dir_creates_parents(tmp_path):
+    run_dir = new_run_dir(tmp_path / "data", "t1", now=datetime(2026, 10, 21, 9, 5, 7))
+    assert run_dir == tmp_path / "data" / "20261021-090507_t1"
+    assert run_dir.is_dir()
+
+
+def test_run_dir_never_reused(tmp_path):
+    when = datetime(2026, 10, 21, 14, 30, 0)
+    new_run_dir(tmp_path, "rabi", now=when)
+    with pytest.raises(FileExistsError):
+        new_run_dir(tmp_path, "rabi", now=when)
