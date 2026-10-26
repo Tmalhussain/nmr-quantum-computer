@@ -1,9 +1,11 @@
 import csv
 import json
+import subprocess
 from datetime import datetime
 from pathlib import Path
 
 import numpy as np
+import yaml
 
 
 def save_shot(run_dir: Path, stem: str, recording: np.ndarray, metadata: dict) -> None:
@@ -53,3 +55,36 @@ def new_run_dir(base_dir: Path, experiment: str, now: datetime | None = None) ->
     run_dir = base_dir / f"{now:%Y%m%d-%H%M%S}_{experiment}"
     run_dir.mkdir(parents=True, exist_ok=False)
     return run_dir
+
+
+def load_config(path: Path, site_path: Path | None = None) -> dict:
+    """Load an experiment YAML, merged over site.yaml if given (experiment values win)."""
+    config = {}
+    if site_path is not None:
+        with open(site_path) as f:
+            config.update(yaml.safe_load(f) or {})
+    with open(path) as f:
+        config.update(yaml.safe_load(f) or {})
+    return config
+
+
+def git_commit(repo_dir: Path | None = None) -> str:
+    """Current commit hash, with '-dirty' if there are uncommitted changes; 'unknown' outside git"""
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repo_dir,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        status = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=repo_dir,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return "unknown"
+    return f"{head}-dirty" if status.strip() else head

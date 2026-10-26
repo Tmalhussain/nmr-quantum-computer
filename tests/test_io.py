@@ -1,11 +1,20 @@
 import csv
 import json
+import re
 from datetime import datetime
+from pathlib import Path
 
 import numpy as np
 import pytest
 
-from efnmr.io import append_log, load_shot, new_run_dir, save_shot
+from efnmr.io import (
+    append_log,
+    git_commit,
+    load_config,
+    load_shot,
+    new_run_dir,
+    save_shot,
+)
 from efnmr.sim import fid
 
 
@@ -83,3 +92,28 @@ def test_run_dir_never_reused(tmp_path):
     new_run_dir(tmp_path, "rabi", now=when)
     with pytest.raises(FileExistsError):
         new_run_dir(tmp_path, "rabi", now=when)
+
+
+def test_config_merge(tmp_path):
+    site = tmp_path / "site.yaml"
+    site.write_text("f0_hz: 1788.0\nt90_s: 0.020\n")
+    exp = tmp_path / "rabi.yaml"
+    exp.write_text("t90_s: 0.025\nrepeats: 4\n")
+    config = load_config(exp, site_path=site)
+    assert config == {"f0_hz": 1788.0, "t90_s": 0.025, "repeats": 4}
+
+
+def test_config_empty_file(tmp_path):
+    exp = tmp_path / "empty.yaml"
+    exp.write_text("")
+    assert load_config(exp) == {}
+
+
+def test_git_commit_in_repo():
+    repo = Path(__file__).parent
+    commit = git_commit(repo)
+    assert re.fullmatch(r"[0-9a-f]{40}(-dirty)?", commit)
+
+
+def test_git_commit_outside_repo(tmp_path):
+    assert git_commit(tmp_path) == "unknown"
